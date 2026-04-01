@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>For Maryam</title>
+    <style>
+        body { 
+            margin: 0; 
+            background: #000; 
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        canvas { 
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* Container for Heart and Text */
+        .overlay {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .neon-heart {
+            width: 120px; 
+            height: 120px;
+            fill: none;
+            stroke: #ff2d95;
+            stroke-width: 3;
+            animation: pulse 1.5s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px #ff2d95);
+        }
+
+        /* Glowing Text Styling */
+        .neon-text {
+            margin-top: 20px;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #ff2d95, 0 0 20px #ff2d95, 0 0 30px #ff2d95;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="overlay">
+        <svg class="neon-heart" viewBox="0 0 100 100">
+            <path d="M50 85 C 30 70, 5 55, 5 30 C 5 10, 30 5, 50 25 C 70 5, 95 10, 95 30 C 95 55, 70 70, 50 85" />
+        </svg>
+        <div class="neon-text">I Love You Maryam</div>
+    </div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let rockets = [];
+const gravity = 0.06;
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
+
+// Function to handle various firework shapes
+function explode(x, y, color) {
+    const style = Math.floor(Math.random() * 3);
+    const max = 100;
+    for (let i = 0; i < max; i++) {
+        let rad = (i * Math.PI * 2) / max;
+        let vx, vy;
+        if (style === 0) { // Circle
+            vx = Math.cos(rad) * 6; vy = Math.sin(rad) * 6;
+        } else if (style === 1) { // Star
+            let rv = Math.random() * 8; vx = Math.cos(rad) * rv; vy = Math.sin(rad) * rv;
+        } else { // Heart Shape particles
+            let t = rad;
+            vx = 16 * Math.pow(Math.sin(t), 3) * 0.4;
+            vy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * 0.4;
+        }
+        particles.push({
+            x: x, y: y,
+            vx: vx + (Math.random() - 0.5),
+            vy: vy + (Math.random() - 0.5),
+            size: Math.random() * 2 + 1,
+            color: color,
+            alpha: 1,
+            decay: 0.015
+        });
+    }
+}
+
+function animate() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (Math.random() < 0.05) {
+        rockets.push({
+            x: Math.random() * canvas.width,
+            y: canvas.height,
+            targetY: Math.random() * (canvas.height * 0.6),
+            color: `hsl(${Math.random() * 360}, 100%, 60%)`
+        });
+    }
+    
+    rockets = rockets.filter(r => {
+        r.y -= 7;
+        ctx.fillStyle = r.color;
+        ctx.fillRect(r.x, r.y, 2, 6);
+        if (r.y <= r.targetY) {
+            explode(r.x, r.y, r.color);
+            return false;
+        }
+        return true;
+    });
+
+    particles.forEach((p, i) => {
+        p.vx *= 0.96; p.vy *= 0.96;
+        p.vy += gravity;
+        p.x += p.vx; p.y += p.vy;
+        p.alpha -= p.decay;
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        if (p.alpha <= 0) particles.splice(i, 1);
+    });
+
+    requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>
